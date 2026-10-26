@@ -394,6 +394,11 @@ public abstract class AbstractRewriteBaseRunMojo extends AbstractRewriteMojo {
 
         private List<RuntimeException> getRecipeErrors(Result result) {
             List<RuntimeException> exceptions = new ArrayList<>();
+            String recipeNames = result.getRecipeDescriptorsThatMadeChanges().stream()
+                    .map(RecipeDescriptor::getName)
+                    .collect(joining(", "));
+            String recipeContext = recipeNames.isEmpty() ? "" : " Recipe(s): " + recipeNames + ".";
+
             new TreeVisitor<Tree, Integer>() {
                 @Override
                 public Tree preVisit(Tree tree, Integer integer) {
@@ -401,7 +406,7 @@ public abstract class AbstractRewriteBaseRunMojo extends AbstractRewriteMojo {
                     markers.findFirst(Markup.Error.class).ifPresent(e -> {
                         Optional<SourceFile> sourceFile = Optional.ofNullable(getCursor().firstEnclosing(SourceFile.class));
                         String sourcePath = sourceFile.map(SourceFile::getSourcePath).map(Path::toString).orElse("<unknown>");
-                        exceptions.add(new RuntimeException("Error while visiting " + sourcePath + ": " + e.getDetail()));
+                        exceptions.add(new RuntimeException("Error while visiting " + sourcePath + ": " + e.getDetail() + recipeContext));
                     });
                     return tree;
                 }
